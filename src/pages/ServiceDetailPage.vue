@@ -1,22 +1,35 @@
 <template>
-  <div v-if="service" class="service-page" :class="{ 'is-dark': isDark, dark: isDark }">
+  <div
+    v-if="service"
+    class="service-page"
+    :class="{ 'is-dark': isDark, dark: isDark }"
+  >
     <header class="detail-header">
       <div class="detail-header-inner">
-        <a class="wordmark" href="/" aria-label="OT9 Labs home">
+        <a class="wordmark" :href="baseUrl" aria-label="OT9 Labs home">
           <span class="wordmark-main">OT<span>9</span></span>
           <span class="wordmark-sub">LABS</span>
         </a>
 
-        <nav class="detail-nav" aria-label="Main navigation">
-          <a href="/#home">Home</a>
-          <a href="/#services" aria-current="page">Services</a>
-          <a href="/#approach">Approach</a>
-          <a href="/#contact">Contact</a>
-        </nav>
+        <Menubar
+          :model="navigation"
+          class="detail-menubar"
+          aria-label="Main navigation"
+        >
+          <template #buttonicon>
+            <IconMenu2 :size="20" aria-hidden="true" />
+          </template>
+        </Menubar>
 
         <div class="detail-actions">
-          <button class="theme-toggle" type="button"
-            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleTheme">
+          <button
+            class="theme-toggle"
+            type="button"
+            :aria-label="
+              isDark ? 'Switch to light mode' : 'Switch to dark mode'
+            "
+            @click="toggleTheme"
+          >
             <IconSun v-if="isDark" :size="19" aria-hidden="true" />
             <IconMoon v-else :size="19" aria-hidden="true" />
           </button>
@@ -32,7 +45,7 @@
       <section class="detail-hero">
         <div class="detail-grid" aria-hidden="true"></div>
         <div class="detail-container detail-hero-inner">
-          <a class="back-link" href="/#services">
+          <a class="back-link" :href="`${baseUrl}#services`">
             <IconArrowLeft :size="16" aria-hidden="true" />
             All services
           </a>
@@ -40,166 +53,101 @@
             <div class="detail-icon">
               <component :is="service.icon" :size="27" aria-hidden="true" />
             </div>
-            <p class="detail-kicker">{{ service.number }} / {{ service.title }}</p>
+            <p class="detail-kicker">
+              {{ service.number }} / {{ service.title }}
+            </p>
           </div>
           <h1>{{ service.headline }}</h1>
           <p class="detail-lead">{{ service.intro }}</p>
           <p class="detail-description">{{ service.description }}</p>
-          <a class="detail-primary-link" href="/#contact">
-            Talk to our team
+          <a class="detail-primary-link" :href="`${baseUrl}#contact`">
+            Talk to our Team
             <IconArrowRight :size="17" aria-hidden="true" />
           </a>
         </div>
       </section>
 
-      <template v-if="service.protectionAreas">
-        <section class="detail-content">
-          <div class="detail-container">
-            <div class="detail-section-heading">
-              <p class="detail-label">Protection includes</p>
-              <h2>Protection built around the person</h2>
-              <p>
-                We connect cyber, digital, threat, and protective intelligence to help identify risks to high-value individuals and those around them.
-              </p>
-            </div>
-            <ul class="detail-check-grid">
-              <li v-for="item in service.protectionAreas" :key="item">
-                <IconCircleCheck :size="19" aria-hidden="true" />
-                {{ item }}
-              </li>
-            </ul>
-            <div class="detail-outcome">
-              <span>The outcome</span>
-              <p>{{ service.outcome }}</p>
-            </div>
+      <section
+        v-for="(section, index) in service.sections"
+        :key="section.label"
+        class="detail-content"
+        :class="{ 'detail-content-muted': index % 2 === 1 }"
+      >
+        <div class="detail-container">
+          <div class="detail-section-heading">
+            <p class="detail-label">{{ section.label }}</p>
+            <p v-if="section.intro">{{ section.intro }}</p>
           </div>
-        </section>
-      </template>
+          <ul v-if="section.items" class="detail-check-grid">
+            <li v-for="item in section.items" :key="item">
+              <IconCircleCheck :size="19" aria-hidden="true" />
+              {{ item }}
+            </li>
+          </ul>
+          <ol v-if="section.flow" class="service-flow">
+            <li v-for="(step, index) in section.flow" :key="step">
+              <span>{{ step }}</span>
+              <IconArrowRight
+                v-if="index < section.flow.length - 1"
+                :size="16"
+                aria-hidden="true"
+              />
+            </li>
+          </ol>
+        </div>
+      </section>
 
-      <template v-else-if="service.trainingAreas">
-        <section class="detail-content">
-          <div class="detail-container">
-            <div class="detail-section-heading">
-              <p class="detail-label">The OT9 approach</p>
-              <h2>Prepare teams to act when it matters</h2>
-              <p>
-                We develop teams that can maintain awareness, communicate clearly, and make disciplined decisions when conditions are uncertain and time is limited.
-              </p>
-            </div>
-            <ol class="attack-stages readiness-stages">
-              <li v-for="(stage, index) in service.readinessStages" :key="stage">
-                <div class="attack-stage-card">
-                  <span>{{ String(index + 1).padStart(2, '0') }}</span>
-                  <span class="attack-stage-name">{{ stage }}</span>
-                </div>
-                <IconArrowRight v-if="index < service.readinessStages.length - 1" :size="15" aria-hidden="true" />
-              </li>
-            </ol>
+      <section class="detail-content">
+        <div class="detail-container">
+          <div class="detail-outcome">
+            <span>THE OUTCOME</span>
+            <p>{{ service.outcome }}</p>
           </div>
-        </section>
-        <section class="detail-content detail-content-muted">
-          <div class="detail-container">
-            <div class="detail-section-heading">
-              <p class="detail-label">Training areas</p>
-              <h2>Build capability across the team</h2>
-            </div>
-            <ul class="detail-check-grid">
-              <li v-for="item in service.trainingAreas" :key="item">
-                <IconCircleCheck :size="19" aria-hidden="true" />
-                {{ item }}
-              </li>
-            </ul>
-            <div class="detail-outcome">
-              <span>The outcome</span>
-              <p>{{ service.outcome }}</p>
-            </div>
-          </div>
-        </section>
-      </template>
-
-      <template v-else-if="service.stages">
-        <section class="detail-content">
-          <div class="detail-container">
-            <div class="detail-section-heading">
-              <p class="detail-label">Our approach</p>
-              <h2>A realistic view of your defenses</h2>
-              <p>
-                We simulate how a determined adversary could identify an opportunity, gain access, and work toward an objective.
-              </p>
-            </div>
-            <ol class="attack-stages">
-              <li v-for="(stage, index) in service.stages" :key="stage">
-                <div class="attack-stage-card">
-                  <span>{{ String(index + 1).padStart(2, '0') }}</span>
-                  <span class="attack-stage-name">{{ stage }}</span>
-                </div>
-                <IconArrowRight v-if="index < service.stages.length - 1" :size="15" aria-hidden="true" />
-              </li>
-            </ol>
-            <div class="detail-outcome">
-              <span>The outcome</span>
-              <p>{{ service.outcome }}</p>
-            </div>
-          </div>
-        </section>
-      </template>
-
-      <template v-else-if="service.monitoring">
-        <section class="detail-content">
-          <div class="detail-container">
-            <div class="detail-section-heading">
-              <p class="detail-label">What we monitor</p>
-              <h2>External risk and digital exposure</h2>
-              <p>
-                We help uncover the signals that traditional perimeter security often misses: lookalikes, impersonation, and compromised legitimacy.
-              </p>
-            </div>
-            <ul class="detail-check-grid">
-              <li v-for="item in service.monitoring" :key="item">
-                <IconCircleCheck :size="19" aria-hidden="true" />
-                {{ item }}
-              </li>
-            </ul>
-            <div class="detail-outcome">
-              <span>The outcome</span>
-              <p>{{ service.outcome }}</p>
-            </div>
-          </div>
-        </section>
-      </template>
+        </div>
+      </section>
     </main>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import Menubar from "primevue/menubar";
 import {
   IconArrowLeft,
   IconArrowRight,
   IconCircleCheck,
   IconMail,
+  IconMenu2,
   IconMoon,
   IconSun,
-} from '@tabler/icons-vue'
-import { services } from '@/data/homepageServices'
+} from "@tabler/icons-vue";
+import { services } from "@/data/homepageServices";
 
-const route = useRoute()
+const route = useRoute();
+const baseUrl = import.meta.env.BASE_URL;
+const navigation = [
+  { label: "Home", url: `${baseUrl}#home` },
+  { label: "About Us", url: `${baseUrl}#about` },
+  { label: "Services", url: `${baseUrl}#services`, class: "is-current" },
+  { label: "Team Sport", url: `${baseUrl}#team-sport` },
+  { label: "Contact", url: `${baseUrl}#contact` },
+];
 const isDark = ref(
-  typeof window !== 'undefined' &&
-    (window.localStorage.getItem('ot9-theme') === 'dark' ||
-      (!window.localStorage.getItem('ot9-theme') &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)),
-)
+  typeof window !== "undefined" &&
+    (window.localStorage.getItem("ot9-theme") === "dark" ||
+      (!window.localStorage.getItem("ot9-theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)),
+);
 
 const service = computed(() => {
-  const match = services.find((item) => item.slug === route.params.slug)
-  return match || services[0]
-})
+  const match = services.find((item) => item.slug === route.params.slug);
+  return match || services[0];
+});
 
 function toggleTheme() {
-  isDark.value = !isDark.value
-  window.localStorage.setItem('ot9-theme', isDark.value ? 'dark' : 'light')
+  isDark.value = !isDark.value;
+  window.localStorage.setItem("ot9-theme", isDark.value ? "dark" : "light");
 }
 </script>
 
@@ -211,7 +159,7 @@ function toggleTheme() {
   --mist: #f3f6fd;
   --soft-text: #69758b;
   color: var(--ink);
-  font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   background: var(--page);
   min-height: 100vh;
 }
@@ -275,21 +223,45 @@ function toggleTheme() {
   letter-spacing: 0.24em;
 }
 
-.detail-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+.detail-menubar {
+  border: 0;
+  padding: 0;
+  background: transparent;
 }
 
-.detail-nav a {
+.detail-menubar :deep(.p-menubar-root-list) {
+  gap: 0.2rem;
+}
+
+.detail-menubar :deep(.p-menubar-item-link) {
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
   color: #42506c;
-  text-decoration: none;
   font-size: 0.84rem;
   font-weight: 600;
 }
 
-.service-page.is-dark .detail-nav a {
-  color: #c1cbe0;
+.detail-menubar :deep(.p-menubar-item-link:hover) {
+  color: var(--brand);
+  background: #f3f6fd;
+}
+
+.detail-menubar :deep(.p-menubar-item.is-current .p-menubar-item-link) {
+  position: relative;
+  color: var(--brand);
+  background: #e8f0ff;
+  font-weight: 800;
+}
+
+.detail-menubar :deep(.p-menubar-item.is-current .p-menubar-item-link)::after {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.32rem;
+  left: 0.9rem;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  content: "";
 }
 
 .detail-actions {
@@ -319,6 +291,23 @@ function toggleTheme() {
   font-weight: 700;
 }
 
+.service-page.is-dark .detail-menubar :deep(.p-menubar-item-link) {
+  color: #c1cbe0;
+}
+
+.service-page.is-dark .detail-menubar :deep(.p-menubar-item-link:hover),
+.service-page.is-dark .detail-menubar :deep(.p-menubar-button:hover) {
+  color: #fff;
+  background: #1a2b4c;
+}
+
+.service-page.is-dark
+  .detail-menubar
+  :deep(.p-menubar-item.is-current .p-menubar-item-link) {
+  color: #9fc0ff;
+  background: #1a2e52;
+}
+
 .detail-hero {
   position: relative;
   background: linear-gradient(180deg, #e8eefb 0%, #f5f7fc 100%);
@@ -335,7 +324,13 @@ function toggleTheme() {
   inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M48 0H0V48' fill='none' stroke='%2396a9cc' stroke-opacity='.28' stroke-width='1'/%3E%3C/svg%3E");
   background-size: 48px 48px;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
   opacity: 0.4;
 }
 
@@ -391,6 +386,7 @@ function toggleTheme() {
   font-size: clamp(2.5rem, 4.5vw, 4.5rem);
   line-height: 1.06;
   letter-spacing: -0.07em;
+  text-transform: uppercase;
 }
 
 .detail-lead {
@@ -443,12 +439,44 @@ function toggleTheme() {
   margin: 0;
   font-size: clamp(2rem, 3vw, 3rem);
   letter-spacing: -0.06em;
+  text-transform: uppercase;
 }
 
 .detail-section-heading p {
   margin: 0.9rem 0 0;
   color: var(--soft-text);
   line-height: 1.8;
+}
+
+.service-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+}
+
+.service-flow li {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.service-flow li > span {
+  padding: 0.75rem 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.service-flow svg {
+  color: var(--brand);
 }
 
 .detail-check-grid {
@@ -495,6 +523,10 @@ function toggleTheme() {
   text-transform: uppercase;
   color: var(--brand);
   font-weight: 800;
+}
+
+.detail-outcome p {
+  font-weight: 700;
 }
 
 .detail-outcome p {
@@ -554,18 +586,29 @@ function toggleTheme() {
   background: var(--mist);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .detail-header-inner {
     grid-template-columns: 1fr auto;
     gap: 1rem;
   }
 
-  .detail-nav {
+  .detail-menubar {
+    width: 100%;
     grid-column: 1 / -1;
-    justify-self: center;
-    margin-top: -0.35rem;
+    grid-row: 2;
+    justify-self: stretch;
+    margin-top: -0.3rem;
   }
 
+  .service-page.is-dark .detail-menubar :deep(.p-menubar-root-list) {
+    border: 1px solid #293b5b;
+    border-radius: 10px;
+    background: #121f37;
+    box-shadow: 0 16px 32px rgb(0 0 0 / 28%);
+  }
+}
+
+@media (max-width: 900px) {
   .detail-check-grid,
   .attack-stages {
     grid-template-columns: 1fr 1fr;
@@ -582,10 +625,8 @@ function toggleTheme() {
     min-height: 68px;
   }
 
-  .detail-nav {
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
+  .detail-menubar {
+    margin: 0 0 0.55rem;
   }
 
   .detail-check-grid,
